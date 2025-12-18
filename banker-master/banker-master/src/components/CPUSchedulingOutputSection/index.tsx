@@ -90,13 +90,13 @@ export function CPUSchedulingOutputSection({ output }: CPUSchedulingOutputSectio
                 <Col span={6}>
                     <Statistic
                         title="Average Waiting Time"
-                        value={output.avgWaitingTime.toFixed(2)}
+                        value={output.avgWaitingTime}
                     />
                 </Col>
                 <Col span={6}>
                     <Statistic
                         title="Average Turnaround Time"
-                        value={output.avgTurnaroundTime.toFixed(2)}
+                        value={output.avgTurnaroundTime}
                     />
                 </Col>
                 <Col span={6}>
@@ -109,7 +109,7 @@ export function CPUSchedulingOutputSection({ output }: CPUSchedulingOutputSectio
                     <Col span={6}>
                         <Statistic
                             title="Average Response Time"
-                            value={output.avgResponseTime.toFixed(2)}
+                            value={output.avgResponseTime}
                         />
                     </Col>
                 )}
