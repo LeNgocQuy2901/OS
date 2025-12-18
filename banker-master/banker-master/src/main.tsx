@@ -9,6 +9,7 @@ const PageReplacement = React.lazy(() => import('./pages/page_replacement'));
 const HDDScheduling = React.lazy(() => import('./pages/hdd_scheduling'));
 const VirtualMemory = React.lazy(() => import('./pages/virtual_memory'));
 const UFS = React.lazy(() => import('./pages/ufs'));
+const CPUScheduling = React.lazy(() => import('./pages/cpu_scheduling'));
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -21,6 +22,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/hdd_scheduling" element={<HDDScheduling />} />
         <Route path="/virtual_memory_mapping" element={<VirtualMemory />} />
         <Route path="/ufs" element={<UFS />} />
+        <Route path="/cpu_scheduling" element={<CPUScheduling />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

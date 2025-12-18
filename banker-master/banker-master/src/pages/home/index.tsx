@@ -10,6 +10,7 @@ export default function Home() {
           flexDirection: "column",
           gap: "10px",
         }}>
+          <ButtonLink to="/cpu_scheduling" type="primary">{"CPU Scheduling Algorithms Visualization"}</ButtonLink>
           <ButtonLink to="https://cpu-scheduling-two.vercel.app/" type="default" target="_blank">
             {"CPU scheduling (by Nguyễn Văn Nhất)"}
           </ButtonLink>
