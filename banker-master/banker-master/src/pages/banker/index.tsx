@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { MatrixInput } from "../../components/MatrixInput";
-import { Button, Form, InputNumber, Select } from "antd";
+import { Button, Form, InputNumber, Select, Upload, message } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import { VectorInput } from "../../components/VectorInput";
 import { createMatrix } from "../../utils/matrices";
 import { createVector } from "../../utils/vectors";
@@ -9,6 +10,7 @@ import { safetyAlgorithm } from "../../utils/algorithms/banker/safetyAlgorithm";
 import { bankerAlgorithm } from "../../utils/algorithms/banker/bankerAlgorithm";
 import { deadlockDetectionAlgorithm } from "../../utils/algorithms/banker/deadlockDetectionAlgorithm";
 import { ButtonLink } from "../../components/ButtonLink";
+import { parseBankerFile } from "../../utils/fileParser";
 
 const ALL_ALGORITHMS = [
     { label: "Safety Algorithm", value: "safety" },
@@ -52,48 +54,73 @@ export default function Banker() {
     };
 
     const executeAlgorithm = () => {
-        switch (algorithm) {
-            case 'safety': {
-                const output = safetyAlgorithm({
-                    Available: availableVector,
-                    Holding: holdingMatrix,
-                    Max: maxMatrix,
-                });
-                setOutput(prevOutput => ({
-                    ...prevOutput,
-                    safety: output,
-                }));
-                break;
-            }
+        try {
+            switch (algorithm) {
+                case 'safety': {
+                    const output = safetyAlgorithm({
+                        Available: availableVector,
+                        Holding: holdingMatrix,
+                        Max: maxMatrix,
+                    });
+                    setOutput(prevOutput => ({
+                        ...prevOutput,
+                        safety: output,
+                    }));
+                    break;
+                }
 
-            case 'banker': {
-                const output = bankerAlgorithm({
-                    Available: availableVector,
-                    Holding: holdingMatrix,
-                    Max: maxMatrix,
-                    iRequest: requestVector,
-                    i: requesterIndex,
-                });
-                setOutput(prevOutput => ({
-                    ...prevOutput,
-                    banker: output,
-                }));
-                break;
-            }
+                case 'banker': {
+                    const output = bankerAlgorithm({
+                        Available: availableVector,
+                        Holding: holdingMatrix,
+                        Max: maxMatrix,
+                        iRequest: requestVector,
+                        i: requesterIndex,
+                    });
+                    setOutput(prevOutput => ({
+                        ...prevOutput,
+                        banker: output,
+                    }));
+                    break;
+                }
 
-            case 'deadlock_detection': {
-                const output = deadlockDetectionAlgorithm({
-                    Available: availableVector,
-                    Holding: holdingMatrix,
-                    Request: requestMatrix,
-                });
-                setOutput(prevOutput => ({
-                    ...prevOutput,
-                    deadlock_detection: output,
-                }));
-                break;
+                case 'deadlock_detection': {
+                    const output = deadlockDetectionAlgorithm({
+                        Available: availableVector,
+                        Holding: holdingMatrix,
+                        Request: requestMatrix,
+                    });
+                    setOutput(prevOutput => ({
+                        ...prevOutput,
+                        deadlock_detection: output,
+                    }));
+                    break;
+                }
             }
+        } catch (error) {
+            message.error('Lỗi: ' + (error instanceof Error ? error.message : 'Unknown error'));
         }
+    };
+
+    const handleFileUpload = (file: File) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const content = e.target?.result as string;
+                const parsed = parseBankerFile(content);
+                setNumProcesses(parsed.numProcesses);
+                setNumResources(parsed.numResources);
+                setAvailableVector(parsed.available);
+                setHoldingMatrix(parsed.holding);
+                setMaxMatrix(parsed.max);
+                setDimensionsDetermined(true);
+                message.success(`Tải file thành công! (${parsed.numProcesses} processes, ${parsed.numResources} resources)`);
+            } catch (err) {
+                message.error('Lỗi khi parse file: ' + (err instanceof Error ? err.message : 'Unknown error'));
+            }
+        };
+        reader.readAsText(file);
+        return false;
     };
 
     return (
@@ -119,7 +146,18 @@ export default function Banker() {
                             </Form.Item>
                         </Form>
 
-                        <Button type="primary" onClick={determineDimensions}>Next</Button>
+                        <Button type="primary" onClick={determineDimensions} style={{ marginBottom: 10 }}>Next</Button>
+                        
+                        <div style={{ marginTop: 20, marginBottom: 20 }}>
+                            <span style={{ marginRight: 10 }}>Hoặc tải file:</span>
+                            <Upload
+                                beforeUpload={handleFileUpload}
+                                maxCount={1}
+                                accept=".txt"
+                            >
+                                <Button icon={<UploadOutlined />}>Upload File</Button>
+                            </Upload>
+                        </div>
                     </>
                 ) : (
                     <>

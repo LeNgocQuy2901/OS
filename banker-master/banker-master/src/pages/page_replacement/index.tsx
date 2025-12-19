@@ -1,4 +1,5 @@
-import { Button, Checkbox, Form, InputNumber, Select } from "antd";
+import { Button, Checkbox, Form, InputNumber, Select, Upload, message } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import { ButtonLink } from "../../components/ButtonLink";
 import { useState } from "react";
 import { PageReplacementAlgorithmInput, PageReplacementAlgorithmOutput } from "../../utils/algorithms/page_replacement/base";
@@ -13,6 +14,7 @@ import { useSavedState } from "../../hooks/useSavedState";
 import { mfuAlgorithm } from "../../utils/algorithms/page_replacement/mfuAlgorithm";
 import { secondChanceAlgorithm } from "../../utils/algorithms/page_replacement/secondChanceAlgorithm";
 import { convertToReferenceString, ReferenceStringInput, ReferenceStringSeparatorId, validateReferenceStringSeparatorId } from "../../components/ReferenceStringInput";
+import { parsePageReplacementFile } from "../../utils/fileParser";
 
 const ALL_ALGORITHMS = [
     { label: "FIFO (First-In-First-Out)", value: "fifo" },
@@ -107,6 +109,22 @@ export default function PageReplacement() {
         second_chance: null,
     });
 
+    const handleFileUpload = (file: File) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const content = e.target?.result as string;
+                const parsed = parsePageReplacementFile(content);
+                setReferenceStringInput(parsed);
+                message.success('Tải file thành công!');
+            } catch (err) {
+                message.error('Lỗi khi parse file: ' + (err instanceof Error ? err.message : 'Unknown error'));
+            }
+        };
+        reader.readAsText(file);
+        return false;
+    };
+
     const execute = async () => {
         try {
             const NUM_FRAMES_START = numFrames;
@@ -185,6 +203,16 @@ export default function PageReplacement() {
                 referenceStringSeparator={referenceStringSeparator}
                 setReferenceStringSeparator={setReferenceStringSeparator}
             />
+
+            <Form.Item style={{ marginTop: 10 }}>
+                <Upload
+                    beforeUpload={handleFileUpload}
+                    maxCount={1}
+                    accept=".txt,.csv"
+                >
+                    <Button icon={<UploadOutlined />}>Upload Reference String File</Button>
+                </Upload>
+            </Form.Item>
 
             </Form>
 

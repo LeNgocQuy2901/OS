@@ -1,4 +1,5 @@
-import { Button, Form, Input, InputNumber, Select } from "antd";
+import { Button, Form, Input, InputNumber, Select, Upload, message } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import { ButtonLink } from "../../components/ButtonLink";
 import _ from "lodash";
 import { useSavedState } from "../../hooks/useSavedState";
@@ -12,6 +13,7 @@ import { cscanAlgorithm } from "../../utils/algorithms/hdd_scheduling/cscanAlgor
 import { lookAlgorithm } from "../../utils/algorithms/hdd_scheduling/lookAlgorithm";
 import { clookAlgorithm } from "../../utils/algorithms/hdd_scheduling/clookAlgorithm";
 import { sstfAlgorithm } from "../../utils/algorithms/hdd_scheduling/sstfAlgorithm";
+import { parseHDDSchedulingFile } from "../../utils/fileParser";
 
 
 async function executeOneAlgorithm({
@@ -111,6 +113,22 @@ export default function HDDScheduling() {
         c_look_to_the_right: null,
     });
 
+    const handleFileUpload = (file: File) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const content = e.target?.result as string;
+                const parsed = parseHDDSchedulingFile(content);
+                setReferenceStringInput(parsed);
+                message.success('Tải file thành công!');
+            } catch (err) {
+                message.error('Lỗi khi parse file: ' + (err instanceof Error ? err.message : 'Unknown error'));
+            }
+        };
+        reader.readAsText(file);
+        return false;
+    };
+
     const execute = async () => {
         try {
             const newOutputOfCurrentAlgorithm = await executeOneAlgorithm({
@@ -174,6 +192,16 @@ export default function HDDScheduling() {
                 referenceStringSeparator={referenceStringSeparator}
                 setReferenceStringSeparator={setReferenceStringSeparator}
             />
+
+            <Form.Item style={{ marginTop: 10 }}>
+                <Upload
+                    beforeUpload={handleFileUpload}
+                    maxCount={1}
+                    accept=".txt,.csv"
+                >
+                    <Button icon={<UploadOutlined />}>Upload Cylinder Request File</Button>
+                </Upload>
+            </Form.Item>
         </Form>
 
         <Button type="primary" onClick={execute}>Run</Button>

@@ -1,7 +1,8 @@
 
 import { useState } from "react";
 import { ButtonLink } from "../../components/ButtonLink";
-import { Button, Form, InputNumber } from "antd";
+import { Button, Form, InputNumber, Upload, message } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import { calculateUFS, UFSOutput } from "../../utils/algorithms/ufs";
 import { UFSOutputSection } from "../../components/UFSOutputSection";
 import { useSavedState } from "../../hooks/useSavedState";
@@ -9,6 +10,7 @@ import { deserializeMemorySize, MemorySize, serializeMemorySize, validateSavedMe
 import Decimal from "decimal.js";
 import { MemorySizeInput } from "../../components/MemorySizeInput";
 import { Link } from "react-router-dom";
+import { parseUFSFile } from "../../utils/fileParser";
 
 export default function UFS() {
     const [numDirectPointers, setNumDirectPointers] = useState(0);
@@ -28,6 +30,32 @@ export default function UFS() {
     const [blockNumberSizeInBytes, setBlockNumberSizeInBytes] = useState(0);
 
     const [output, setOutput] = useState<UFSOutput | null>(null);
+
+    const handleFileUpload = (file: File) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const content = e.target?.result as string;
+                const iNodeValues = parseUFSFile(content);
+                if (iNodeValues.length >= 4) {
+                    setNumDirectPointers(iNodeValues[0]);
+                    setNum1stIndirectPointers(iNodeValues[1]);
+                    setNum2ndIndirectPointers(iNodeValues[2]);
+                    setNum3rdIndirectPointers(iNodeValues[3]);
+                    if (iNodeValues.length >= 5) {
+                        setBlockNumberSizeInBytes(iNodeValues[4]);
+                    }
+                    message.success('Tải file thành công!');
+                } else {
+                    message.error('File phải chứa ít nhất 4 giá trị: direct, 1st_indirect, 2nd_indirect, 3rd_indirect');
+                }
+            } catch (err) {
+                message.error('Lỗi khi parse file: ' + (err instanceof Error ? err.message : 'Unknown error'));
+            }
+        };
+        reader.readAsText(file);
+        return false;
+    };
 
     const calculate = () => {
         const newOutput = calculateUFS({
@@ -95,6 +123,16 @@ export default function UFS() {
                         value={blockNumberSizeInBytes}
                         onChange={value => setBlockNumberSizeInBytes(value ?? 0)}
                     />
+                </Form.Item>
+
+                <Form.Item style={{ marginTop: 10 }}>
+                    <Upload
+                        beforeUpload={handleFileUpload}
+                        maxCount={1}
+                        accept=".txt"
+                    >
+                        <Button icon={<UploadOutlined />}>Upload UFS Configuration File</Button>
+                    </Upload>
                 </Form.Item>
             </Form>
             <Button type="primary" onClick={calculate}>Calculate</Button>
